@@ -1,0 +1,4 @@
+node main.js
+
+
+cd investment-news

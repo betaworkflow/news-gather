@@ -1,21 +1,25 @@
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const fetchFeeds = require('./fetchFeeds');
+const matchKeywords = require('./matchKeywords');
+const saveNews = require('./saveNews');
+const buildMarkdown = require('./buildMarkdown');
+const notifyTelegram = require('./notifyTelegram');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
+(async () => {
+  const news = await fetchFeeds();
+  const newsWithKeywords = await matchKeywords(news);
 
-async function fetchAssets() {
-  const { data, error } = await supabase
-    .from('assets')
-    .select('*');
+  console.log(`✅ ข่าวทั้งหมด: ${newsWithKeywords.length}`);
+  console.log(`🔥 ข่าวสำคัญ: ${newsWithKeywords.filter(n => n.priority).length}`);
+  console.log(newsWithKeywords.slice(0, 3)); // แสดงข่าว 3 ตัวอย่าง
 
-  if (error) {
-    console.error('Error fetching assets:', error);
-  } else {
-    console.log('Fetched assets:', data);
-  }
-}
+  await saveNews(newsWithKeywords); // บันทึกลง Supabase
 
-fetchAssets();
+  // ✅ สร้าง Markdown report
+  const report = buildMarkdown(newsWithKeywords);
+
+  // ✅ ส่งไฟล์ .md ไป Telegram
+  await notifyTelegram({
+    message: `📰 รายงานข่าวประจำวันที่ ${new Date().toISOString().split('T')[0]}`,
+    filePath: __dirname + '/' + report.filename
+  });
+})();
