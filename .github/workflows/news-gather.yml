@@ -1,5 +1,4 @@
-name: News gather daily (auto)
-
+name: News Gather Workflow (trigger fix)
 
 on:
   schedule:
