@@ -1,4 +1,5 @@
-name: Run news-gather daily
+name: News gather daily (auto)
+
 
 on:
   schedule:
